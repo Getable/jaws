@@ -170,7 +170,7 @@ function Application (opts) {
 
             if (!self.cacheErrors)
               resp.once('finish', function () {
-                if (resp.statusCode !== 200)
+                if (resp.statusCode !== 200 && resp.statusCode !== 304)
                   self.lru.del(u)
               })
 
