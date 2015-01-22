@@ -15,6 +15,7 @@ var fs = require('fs')
   , mapleTree = require('mapleTree')
   , lrucache = require('lru-cache')
   , safeStringify = require('json-stringify-safe')
+  , compressible = require('compressible')
   ;
 
 function getMime (contenttype) {
@@ -169,7 +170,7 @@ function Application (opts) {
 
             if (!self.cacheErrors)
               resp.once('finish', function () {
-                if (resp.statusCode !== 200)
+                if (resp.statusCode !== 200 && resp.statusCode !== 304)
                   self.lru.del(u)
               })
 
@@ -456,6 +457,12 @@ Cached.prototype.end = function (data) {
   this.buffer = buffer
   this.md5 = crypto.createHash('md5').update(this.buffer).digest("hex")
   this.headers['etag'] = this.md5
+
+  if (!compressible(this.headers['content-type'])) {
+    self.ended = true
+    self.emit('end')
+    return
+  }
 
   zlib.gzip(buffer, function (e, compressed) {
     if (e) return self.emit('error', e)
