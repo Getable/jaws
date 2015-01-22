@@ -39,8 +39,8 @@ function Application (opts) {
     d.on('error', function (e) {
       console.error(e.stack)
 
-      resp.statusCode = 500
       if (!resp._headerSent) {
+        resp.statusCode = 500
         resp.setHeader('content-type', 'text-plain')
         resp.write(e.stack)
       }
