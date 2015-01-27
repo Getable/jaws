@@ -385,7 +385,7 @@ function Cached () {
 
     function _do () {
       if (req.method === 'HEAD' && self.md5) {
-        resp.writeHead(self.statusCode, self.headers)
+        if (!resp._headerSent) resp.writeHead(self.statusCode, self.headers)
         resp.end()
         return
       }
@@ -394,18 +394,20 @@ function Cached () {
         for (var i in self.headers) {
           if (i !== 'content-length') h[i] = self.headers[i]
         }
-        resp.writeHead(304, h)
+        if (!resp._headerSent) resp.writeHead(304, h)
         resp.end()
         return
       }
 
       // gzipping
       if (self.compressed && req.headers['accept-encoding'] && req.headers['accept-encoding'].match(/\bgzip\b/) ) {
-        for (var i in self.headers) {
-          resp.setHeader(i, self.headers[i])
+        if (!resp._headerSent) {
+          for (var i in self.headers) {
+            resp.setHeader(i, self.headers[i])
+          }
+          resp.setHeader('content-encoding', 'gzip')
+          resp.setHeader('content-length', self.compressed.length)
         }
-        resp.setHeader('content-encoding', 'gzip')
-        resp.setHeader('content-length', self.compressed.length)
         resp.end(self.compressed)
         return
       }
