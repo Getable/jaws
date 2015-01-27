@@ -3,3 +3,5 @@
 .git*
 .npmignore
 tests/
+
+.DS_Store
