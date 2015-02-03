@@ -39,7 +39,7 @@ function Application (opts) {
     d.on('error', function (e) {
       console.error(e.stack)
 
-      if (!resp._headerSent) {
+      if (!resp.headersSent) {
         resp.statusCode = 500
         resp.setHeader('content-type', 'text-plain')
         resp.write(e.stack)
@@ -385,7 +385,7 @@ function Cached () {
 
     function _do () {
       if (req.method === 'HEAD' && self.md5) {
-        if (!resp._headerSent) resp.writeHead(self.statusCode, self.headers)
+        if (!resp.headersSent) resp.writeHead(self.statusCode, self.headers)
         resp.end()
         return
       }
@@ -394,14 +394,14 @@ function Cached () {
         for (var i in self.headers) {
           if (i !== 'content-length') h[i] = self.headers[i]
         }
-        if (!resp._headerSent) resp.writeHead(304, h)
+        if (!resp.headersSent) resp.writeHead(304, h)
         resp.end()
         return
       }
 
       // gzipping
       if (self.compressed && req.headers['accept-encoding'] && req.headers['accept-encoding'].match(/\bgzip\b/) ) {
-        if (!resp._headerSent) {
+        if (!resp.headersSent) {
           for (var i in self.headers) {
             resp.setHeader(i, self.headers[i])
           }
@@ -426,7 +426,7 @@ function Cached () {
 }
 util.inherits(Cached, events.EventEmitter)
 Cached.prototype.write = function (data) {
-  if (!this._headerSent) {
+  if (!this._headersent) {
     if (!this.statusCode) throw new Error('Must set statusCode before write()')
     this.emit('writeHead')
   }
@@ -436,7 +436,7 @@ Cached.prototype.write = function (data) {
   this.data.push(data)
 }
 Cached.prototype.writeHead = function (status, headers) {
-  this._headerSent = true
+  this._headersent = true
   this.statusCode = status
   for (var i in headers) this.headers[i] = headers[i]
   this.emit('writeHead')
